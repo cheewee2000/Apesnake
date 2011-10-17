@@ -6,7 +6,7 @@
 #define DEFAULT_XML_FILE  "apesnake.xml"
 
 class face{
-    
+//apesnake!!!
 public:
     float mouthWidth, mouthHeight;
     int found;
