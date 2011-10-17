@@ -18,7 +18,7 @@ void testApp::setup(){
     ofEnableSmoothing();
     
     //loadXMLs
-    apesnake.load("apesnake.xml");
+    apesnake.load();
     loadSettings();
     
     //camera
@@ -34,6 +34,7 @@ void testApp::setup(){
     
     eyeOffsetX=15;
     eyeOffsetY=-40;
+    drawCamera=false;
 }
 
 //--------------------------------------------------------------
@@ -146,7 +147,7 @@ void testApp::update(){
         }
         
     }
-
+    
     
 }
 
@@ -156,24 +157,35 @@ void testApp::draw(){
     
     //draw APESNAKE! hell yeah!
     float imageR=ofGetWidth()/overlay.getWidth();
-
+    
     overlay.draw(ofGetWidth()*posValue.x,
                  ofGetHeight()*posValue.y, 
                  (overlay.getWidth()*imageR)*scaleValue.x, 
                  (overlay.getHeight()*imageR)*scaleValue.y);
-
+    
     if(currentFace.found>0) drawFace();        
     drawDebugStuff(debugMode);
+    
+    if(drawCamera){
+    	camera.draw(250, 380, 420, 278);
+        // camera.drawPhoto(0, 0, 432, 288);
+        
+        if(camera.isLiveReady()) {
+            stringstream status;
+			status << camera.getWidth() << "x" << camera.getHeight() << " @ " <<
+			(int) ofGetFrameRate() << " app-fps " << " / " <<
+			(int) camera.getFrameRate() << " cam-fps";
+            ofDrawBitmapString(status.str(), 10, 20);
+        }
+    }
 }
 
 //--------------------------------------------------------------
 float testApp::checkFace  (face f){
     float score=0;
     
-    //if(f.mouthHeight!=-1)score+=abs(currentFace.mouthHeight-f.mouthHeight)*mouthThres;
-    //if(f.mouthWidth!=-1)score+=abs(currentFace.mouthWidth-f.mouthWidth)*mouthThres;
-    if(f.mouthHeight!=-1)score+=(f.mouthHeight-currentFace.mouthHeight)*mouthThres;
-    if(f.mouthWidth!=-1)score+=(f.mouthWidth-currentFace.mouthWidth)*mouthThres;
+    if(f.mouthHeight!=-1)score+=abs(currentFace.mouthHeight-f.mouthHeight)*mouthThres;
+    if(f.mouthWidth!=-1)score+=abs(currentFace.mouthWidth-f.mouthWidth)*mouthThres;
     
     //if(f.orientationX!=-1)score+=abs(currentFace.orientationX-f.orientationX)*orientationThres;
     //if(f.orientationY!=-1)score+=abs(currentFace.orientationY-f.orientationY)*orientationThres;
@@ -204,18 +216,22 @@ float testApp::checkFace  (face f){
 void testApp::keyPressed  (int key){
     
     switch (key) {
-        //save case: no data gets saved unless you hit the s key
+            //save case: no data gets saved unless you hit the s key
         case 's':
             apesnake.save(currentFace);
             saveSettings();
             break;
-        //save case: no data gets loaded after first load unless you hit the l key
+            //save case: no data gets loaded after first load unless you hit the l key
         case 'l':
             apesnake.load();
             loadSettings();
             break;
+        case 'c':
+            drawCamera=!drawCamera;
+            break;
         case 'd':
             debugMode=!debugMode;
+            drawCamera=!drawCamera;
             gui.setPage(key - '0');
             gui.show();
             break;
@@ -233,22 +249,15 @@ void testApp::keyPressed  (int key){
         case '.':
             mouthThres-=.1;
             break;
-           
-        case 'w':
-            scoreThres+=.1;
-            break;
-        case 'q':
-            scoreThres-=.1;
-            break;
             
         default:
             break;
     }
     
-//    XML.setValue("SETINGS:orientationThres", orientationThres);
-//    XML.setValue("SETINGS:mouthThres", mouthThres);
+    //    XML.setValue("SETINGS:orientationThres", orientationThres);
+    //    XML.setValue("SETINGS:mouthThres", mouthThres);
     
-//    XML.saveFile("settings.xml");
+    //    XML.saveFile("settings.xml");
 }
 
 //--------------------------------------------------------------
@@ -274,36 +283,35 @@ void testApp::drawFace(){
     //mouth
     //ofSetLineWidth(5);
     //ofEllipse(0,0, currentFace.mouthWidth*10, currentFace.mouthHeight*10);
-    mouth.draw(-currentFace.mouthWidth*12/2.7,-20,currentFace.mouthWidth*12, currentFace.mouthHeight*24);
+    mouth.draw(0,0,currentFace.mouthWidth*15, currentFace.mouthHeight*28);
     
     
     //eyes
-
+    
     //left eye
     //ofEllipse(-15*currentFace.eyeLeft,-40*currentFace.eyeLeft,10,10);
     eyeLeft.draw(-15*currentFace.eyeLeft,-40*currentFace.eyeLeft);
-    
-    
     //right eye
     //ofEllipse(15*currentFace.eyeRight,-40*currentFace.eyeRight,10,10);
     eyeRight.draw(15*currentFace.eyeRight,-40*currentFace.eyeRight);
     
     //eyebrows
-    //ofLine(-4*currentFace.eyebrowLeft,-20*currentFace.eyebrowLeft, -10*currentFace.eyebrowLeft,-20*currentFace.eyebrowLeft);
+    ofLine(-4*currentFace.eyebrowLeft,-20*currentFace.eyebrowLeft, -10*currentFace.eyebrowLeft,-20*currentFace.eyebrowLeft);
     
     ofPopMatrix();
-
+    
 }
 //--------------------------------------------------------------
 void testApp::drawDebugStuff(bool debugMode){
     if(debugMode){
+        ofPushStyle();
         ofPushMatrix();
         ofTranslate(260, 130);
         
         ofFill();
         ofSetColor(0,0,0,80);
-        ofRect(-10, -15, 420, 400);
-
+        ofRect(-10, -15, 420, 250);
+        
         ofNoFill();
         ofSetColor(255,255,255);
         string buf;
@@ -327,7 +335,6 @@ void testApp::drawDebugStuff(bool debugMode){
         
         
         buf = "score: " + ofToString( score, 4);
-        buf += "\nscoreThres: " + ofToString( scoreThres, 4);
         buf += "\norientationThres[]: " + ofToString( orientationThres, 4);
         buf += "\nmouthhres<>: " + ofToString( mouthThres, 4);
         
@@ -342,7 +349,7 @@ void testApp::drawDebugStuff(bool debugMode){
         
         
         gui.draw();
-        
+        ofPopStyle();
     }
 }
 //--------------------------------------------------------------
@@ -358,7 +365,7 @@ void testApp::setupDebugGUI(){
 void testApp::loadSounds(){
     mouthW.loadSound("sounds/OralMoses_Tongue Chatter Short2.wav");
     mouthH.loadSound("sounds/OralMoses_Tongue Chatter Short3.wav");
-
+    
 }
 
 //--------------------------------------------------------------
@@ -366,12 +373,12 @@ void testApp::loadImages(){
     eyeLeft.loadImage("imgs/eyeL.png");
     eyeRight.loadImage("imgs/eyeR.png");
     mouth.loadImage("imgs/mouth.png");
-//  overlay.loadImage("manwolfs.jpg");
     overlay.loadImage("imgs/manwolfs.png");
 }
 
 //--------------------------------------------------------------
 void testApp::loadSettings(){
+    
     XML.loadFile("settings.xml");
     orientationThres= XML.getValue("SETINGS:orientationThres", 0.0);
     mouthThres= XML.getValue("SETINGS:mouthThres", 0.0);
@@ -380,7 +387,7 @@ void testApp::loadSettings(){
     scaleThres= XML.getValue("SETINGS:scaleThres", 0.0);
     
     eyePosThres= XML.getValue("SETINGS:eyePosThres", 0.0);
-
+    
 }
 
 //--------------------------------------------------------------

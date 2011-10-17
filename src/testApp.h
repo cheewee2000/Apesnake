@@ -46,22 +46,23 @@ public:
     float checkFace(face f);
     face currentFace;    
     face apesnake;
-
+    
     float score, scoreThres;
     float orientationThres, mouthThres;
     float positionThres, scaleThres;
     float eyeOffsetX,eyeOffsetY;
     float eyePosThres;
-
+    
     //image
     ofImage overlay;
     ofPoint posValue;
     ofPoint scaleValue;
     
     
+    
     //camera
     ofxEdsdk::Camera camera;
-    
+    bool drawCamera;
     //other
     bool debugMode;
     void drawDebugStuff(bool debugMode);
